@@ -9,15 +9,30 @@ export const dynamic = "force-dynamic";
 export default async function CollectionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ genre?: string }>;
+  searchParams: Promise<{ genre?: string; category?: string; search?: string }>;
 }) {
   const books = await getBooks();
-  const { genre } = await searchParams;
+  const resolvedParams = await searchParams;
+  const targetCategory = resolvedParams.category || resolvedParams.genre;
+  const targetSearch = resolvedParams.search;
 
-  const categories = Array.from(new Set(books.map((b) => b.category)));
-  const filteredBooks = genre
-    ? books.filter((b) => b.category.toLowerCase() === genre.toLowerCase())
-    : books;
+  const categories = Array.from(new Set(books.map((b) => b.category).filter(Boolean)));
+  let filteredBooks = books;
+
+  if (targetCategory) {
+    filteredBooks = filteredBooks.filter((b) => 
+      b.category && b.category.toLowerCase() === targetCategory.toLowerCase()
+    );
+  }
+
+  if (targetSearch) {
+    const s = targetSearch.toLowerCase();
+    filteredBooks = filteredBooks.filter((b) => 
+      b.title.toLowerCase().includes(s) || 
+      b.author.toLowerCase().includes(s)
+    );
+  }
+
 
   return (
     <main className="flex min-h-screen flex-col bg-[#EFECE6] text-[#3D3430] font-sans">
